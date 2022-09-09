@@ -1,0 +1,72 @@
+# -------------------------------------------------------------------------------
+# Filename:     Dockerfile.16.04
+# UpdateDate:   2022/09/08
+# Description:  Build docker images for edge-cross-compile.
+# Example:
+# Depends:
+#               gcc-linaro-6.2.1-2016.11-x86_64_aarch64-linux-gnu.tgz(ftp://download.cambricon.com:8821/**/gcc-linaro-6.2.1-2016.11-x86_64_aarch64-linux-gnu.tgz)
+#               gcc-arm-none-eabi-8-2018-q4-major.tar.gz(ftp://download.cambricon.com:8821/**/gcc-arm-none-eabi-8-2018-q4-major.tar.gz)
+# Notes:
+#               1.gcc-linaro&cntoolkit-edge has been deployed to the container.
+#                 gcc-linaro(/opt/work/gcc-linaro-6.2.1-2016.11-x86_64_aarch64-linux-gnu)
+#               2.These environment variables has been set in the container
+#                 BIN_DIR_WORK=/opt/work
+#                 BIN_DIR_GCC_Linaro=/opt/work/gcc-linaro-6.2.1-2016.11-x86_64_aarch64-linux-gnu/bin
+#                 BIN_DIR_GCC_ARM=/opt/work/gcc-arm-none-eabi-8-2018-q4-major/bin
+#                 PATH=$BIN_DIR_GCC_Linaro:$BIN_DIR_GCC_ARM:$PATH
+# -------------------------------------------------------------------------------
+# 0.Start FROM ubuntu:16.04 image
+FROM ubuntu:16.04
+#FROM ubuntu:18.04
+
+MAINTAINER kang <ksp416@163.com>
+
+#WORKDIR /opt/work/
+#path_work
+ARG path_work=edge-cross-compile
+#gcc_linaro
+ARG edge_gcc_linaro=gcc-linaro-6.2.1-2016.11-x86_64_aarch64-linux-gnu.tgz
+ARG with_gcc_linaro_installed=yes
+#gcc_arm
+ARG edge_gcc_arm=gcc-arm-none-eabi-8-2018-q4-major.tar.gz
+ARG with_gcc_arm_installed=no
+
+# 1.Sync files
+RUN echo -e 'nameserver 114.114.114.114' > /etc/resolv.conf
+COPY ./docker/* /temp/
+WORKDIR /temp/
+RUN cp sources_16.04.list /etc/apt/sources.list
+
+# 2.Pre-installed software
+ENV DEBIAN_FRONTEND=noninteractive
+RUN bash ./pre_packages.sh
+
+# 3.Set ENV && Clean
+ENV LANG C.UTF-8
+ENV TIME_ZONE Asia/Shanghai
+RUN echo "${TIME_ZONE}" > /etc/timezone && \
+    ln -sf /usr/share/zoneinfo/${TIME_ZONE} /etc/localtime && \
+    rm -rf /temp/
+
+# 4.Sync files
+WORKDIR /opt/work/
+COPY ./$path_work /opt/work/
+
+# 5.Pre-installed software
+RUN if [ "$with_gcc_linaro_installed" = "yes" ]; then tar zxf /opt/work/$edge_gcc_linaro -C /opt/work && \
+    echo 'export BIN_DIR_GCC_Linaro="/opt/work/gcc-linaro-6.2.1-2016.11-x86_64_aarch64-linux-gnu/bin"' >> /opt/work/env.sh && \
+    echo 'export PATH="$BIN_DIR_GCC_Linaro:$PATH"' >> /opt/work/env.sh && \
+    rm -rf /opt/work/$edge_gcc_linaro; fi && \
+    if [ "$with_gcc_arm_installed" = "yes" ]; then tar zxf /opt/work/$edge_gcc_arm -C /opt/work && \
+    echo 'export BIN_DIR_GCC_ARM="/opt/work/gcc-arm-none-eabi-8-2018-q4-major/bin"' >> /opt/work/env.sh && \
+    echo 'export PATH="$BIN_DIR_GCC_ARM:$PATH"' >> /opt/work/env.sh && \
+    rm -rf /opt/work/$edge_gcc_arm; fi && \
+    echo '#!/bin/bash' > /opt/work/env.sh && \
+    echo 'export BIN_DIR_WORK="/opt/work"' >> /opt/work/env.sh
+
+# 6.Set WorkDir
+ENV BIN_DIR_WORK=/opt/work
+ENV BIN_DIR_GCC_Linaro=/opt/work/gcc-linaro-6.2.1-2016.11-x86_64_aarch64-linux-gnu/bin
+ENV BIN_DIR_GCC_ARM=/opt/work/gcc-arm-none-eabi-8-2018-q4-major/bin
+ENV PATH=$BIN_DIR_GCC_Linaro:$BIN_DIR_GCC_ARM:$PATH
+ENV LANG C.UTF-8
