@@ -116,7 +116,7 @@ git clone https://github.com/CambriconKnight/edge-cross-compile-docker-image.git
 ```bash
 ......
 ====================== save image ======================
--rw-rw-r-- 1 root root 3785447424 7月  27 18:35 ./docker/image-ubuntu16.04-edge-cross-compile-$VERSION.tar.gz
+-rw-rw-r-- 1 root root 1979560448 9月   9 18:15 ./docker/image-ubuntu16.04-edge-cross-compile-v1.0.0.tar.gz
 ```
 
 # 5. 加载镜像
