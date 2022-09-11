@@ -22,10 +22,12 @@ rm -rf /var/lib/apt/lists/* \
             python3.5 libssl-dev libncurses5-dev bc tree \
             minicom tftpd-hpa nfs-kernel-server nfs-common \
             net-tools \
+            libusb-1.0.0 libusb-1.0.0-dev libxml2-dev \
     && apt-get clean \
     && apt-get update --fix-missing \
     && rm -rf /var/lib/apt/lists/* \
     && echo -e "\033[0;32m[apt install... Done] \033[0m"
+ln -s /usr/include/libxml2/libxml /usr/include/libxml
 echo '# /etc/default/tftpd-hpa' > /etc/default/tftpd-hpa \
     && echo 'TFTP_USERNAME="tftp"' >> /etc/default/tftpd-hpa \
     && echo 'TFTP_DIRECTORY="/data/tftp"' >> /etc/default/tftpd-hpa \
